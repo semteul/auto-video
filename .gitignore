@@ -1,0 +1,49 @@
+ # 통합 .gitignore (루트 기준)
+
+# OS / 편집기
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python 공통 (api, workers)
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 루트/프로젝트 가상환경
+.venv/
+venv/
+env/
+pyvenv.cfg
+Scripts/
+
+# Node / 웹(frontend)
+node_modules/
+web/node_modules/
+web/dist/
+web/dist-ssr/
+web/*.local
+
+# 로그 / 임시 파일
+*.log
+logs/
+tmp/
+temp/
+
+# 환경설정 (민감정보)
+.env
+.env.*
+api/.env
+workers/.env
+web/.env
+
+# Docker / 기타
+*.pid
+docker-data/
+infra/redis-data/
+

@@ -1,0 +1,18 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: auto-video-redis
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./infra/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./infra/redis-data:/data
+    restart: unless-stopped
+
+volumes:
+  # 로컬 개발용 데이터 저장소 (infra/redis-data 디렉터리와 매핑됨)
+  # compose 자체 볼륨을 안 쓰고, 위 services.redis.volumes에서 호스트 디렉터리를 직접 마운트했으므로
+  # 필요 없지만, 나중에 네임드 볼륨으로 바꾸고 싶으면 여기에 정의를 추가하면 됩니다.
+  # 예: redis-data:
+  {}
