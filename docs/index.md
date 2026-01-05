@@ -9,13 +9,13 @@ nav_order: 1
 # 프로젝트 폴더
 ```
 auto-video/
-├─ api/          # Python API 서버 (FastAPI)
-├─ web/          # FE (Vite + React + TS)
-├─ workers/      # Python 워커 (AI 작업)
-├─ infra/        # infra 설정 (docker-compose, redis.conf 등)
-├─ tasks.py      # 로컬 개발용 실행 스크립트 (bootstrap, dev)
-├─ docker-compose.yml  # 로컬 개발용 Redis 등 컨테이너 정의
-└─ README.md 
+├─ docs/                # 문서 정리 (just-the-docs 자동 배포)
+├─ infra/               # infra 설정 (docker-compose, redis.conf 등)
+├─ server/              # Python API(FastAPI) + worker (dramatiq, 향후 추가 예정)
+├─ web/                 # FE (Vite + React + TS)
+├─ docker-compose.yml   # 로컬 개발용 Redis 등 컨테이너 정의
+├─ .gitignore           # 전역 .gitignore, 프로젝트 전체가 공유중
+└─ readme.md 
 ```
 
 
@@ -35,9 +35,9 @@ auto-video/
 ```
 cd web
 ```
-### 개발환경 세팅
+### 로컬 개발환경
 
-로컬 실행
+개발 서버 실행
 ```
 npm run dev
 ```
@@ -47,19 +47,93 @@ npm run dev
 npm run build
 ```
 
+## 로컬 Redis 시동
+docker-compose 생성
+```
+cd /
+docker-compose up
+```
+
+docker 컨테이너 안에서 동작하는지 확인
+```
+docker exec auto-video-redis redis-cli ping
+```
+
+
+
 ## Python API 서버 개발
+개발환경 실행 전 로컬 redis 시동 필요
 ```
 cd api
 ```
-### 개발환경 세팅
 
-로컬 실행
+### 로컬 개발환경
+의존성 설치(최소실행시 필수)
+```
+poetry install
 ```
 
+개발서버 실행
 ```
+poetry run uvicorn api.main:app --reload --app-dir src
+```
+
+* **poetry run** : poetry 가상환경에서 실행
+
+* **uvicorn** : 실제 실행하는 서버 프로그램.
+  
+* **api.main:app**
+main.py 모듈(api.main) 안에 있는 app 객체를 이용
+
+* **--reload**
+코드변경시 자동 서버 재시작
+
+* **--app-dir src**
+소스 루트는 src
+
+### Poetry 가상환경 위치 (.venv 사용하기)
+
+기본 설정에서는 Poetry가 사용자 캐시 디렉터리(예: `AppData\Local\pypoetry\Cache\virtualenvs\...`)
+아래에 가상환경을 만든다. 프로젝트 안에 `.venv` 폴더로 가상환경을 두고 싶다면
+아래 설정을 한 번만 해두면 된다.
+
+```bash
+poetry config virtualenvs.in-project true
+```
+
+그 후 해당 프로젝트 루트에서 기존 가상환경을 지우고 다시 설치하면 `.venv`가 생성된다.
+
+```bash
+cd api   # 또는 server, workers 등 해당 프로젝트 루트
+poetry env remove python
+poetry install
+```
+
+VS Code/Pylance에서 Python 인터프리터를 선택할 때는, 이 `.venv` 폴더 안의
+`python`(Windows에서는 `Scripts/python.exe`)을 선택하면 된다.
+
 ## Python Worker 개발
-### 
+개발환경 실행 전 로컬 redis 시동 필요
 
+```
+cd ./workers
+```
+### 로컬 개발환경
+의존성 설치(최소실행시 필수)
+```
+poetry install
+```
+
+
+Dramatiq Actor 실행
+```
+poetry run dramatiq workers.tts
+```
+
+모듈 테스트
+```
+poetry run py ./src/workers/tts.py
+```
 
 ---
 
