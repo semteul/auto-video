@@ -14,8 +14,8 @@ function VideosPage() {
 
 function App() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50">
-      <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur">
+    <div className="min-h-screen">
+      <header className="border-b border-slate-800 text-white bg-slate-900/60 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <span className="text-sm font-semibold tracking-wide text-sky-400">
             auto-video

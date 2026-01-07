@@ -25,11 +25,11 @@ auto-video/
 
 
 # 개발환경
-
-* node 필요
-* docker 필요
-* python 필요
-* poetry 필요 : https://python-poetry.org/docs/#installation
+## 필요 패키지
+* node
+* docker
+* python
+* poetry : https://python-poetry.org/docs/#installation
 
 ## FE개발
 ```
@@ -47,14 +47,14 @@ npm run dev
 npm run build
 ```
 
-## 로컬 Redis 시동
+## 개발용 로컬 인프라 시동
 docker-compose 생성
 ```
 cd /
 docker-compose up
 ```
 
-docker 컨테이너 안에서 동작하는지 확인
+redis 동작확인
 ```
 docker exec auto-video-redis redis-cli ping
 ```
@@ -64,7 +64,7 @@ docker exec auto-video-redis redis-cli ping
 ## Python API 서버 개발
 개발환경 실행 전 로컬 redis 시동 필요
 ```
-cd api
+cd server
 ```
 
 ### 로컬 개발환경
@@ -75,21 +75,23 @@ poetry install
 
 개발서버 실행
 ```
-poetry run uvicorn api.main:app --reload --app-dir src
+poetry run uvicorn server.api.main:app --reload
 ```
 
 * **poetry run** : poetry 가상환경에서 실행
 
 * **uvicorn** : 실제 실행하는 서버 프로그램.
   
-* **api.main:app**
-main.py 모듈(api.main) 안에 있는 app 객체를 이용
+* **server.api.main:app**
+	server/src/server/api/main.py 모듈(server.api.main) 안에 있는 app 객체를 이용
 
 * **--reload**
-코드변경시 자동 서버 재시작
+	코드변경시 자동 서버 재시작
 
-* **--app-dir src**
-소스 루트는 src
+* **서버 포트 / OpenAPI**
+	* 서버 기본 주소: http://127.0.0.1:8000
+	* Swagger UI (OpenAPI 문서): http://127.0.0.1:8000/docs
+	* 원시 OpenAPI 스키마(JSON): http://127.0.0.1:8000/openapi.json
 
 ### Poetry 가상환경 위치 (.venv 사용하기)
 

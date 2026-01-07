@@ -1,31 +1,52 @@
-from pathlib import Path
 from typing import List
 
 from google.api_core.client_options import ClientOptions
 from google.cloud import texttospeech_v1beta1 as texttospeech
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel
 
+from .settings import TtsSettings
 
-BASE_PATH = Path(__file__).resolve()
-ENV_FILE = None
-for parent in BASE_PATH.parents:
-    candidate = parent / ".env.local"
-    if candidate.exists():
-        ENV_FILE = candidate
-        break
+class Word(BaseModel):
+    text: str
+    displayed_text: str
+    is_caption_splitted: bool
+    start: float
 
+class Section(BaseModel):
+    id: str
+    is_generated: bool
+    delay: float
+    words: list[Word]
 
-class Settings(BaseSettings):
-    google_tts_api_key: str
+class VideoScript(BaseModel):
+    id: str
+    title: str
+    section_ids: list[str]
 
-    model_config = SettingsConfigDict(
-        env_file=str(ENV_FILE) if ENV_FILE is not None else None,
-        env_file_encoding="utf-8",
-    )
+def build_ssml(text: str) -> str:
+    """
+    Example:
+        "안녕하세요 SSML 테스트 입니다." ->
+        <speak><mark name="w0"/>안녕하세요 <mark name="w1"/>SSML ...</speak>
+    """
+
+    words = text.split()
+
+    parts: list[str] = ["<speak>"]
+    for i, word in enumerate(words):
+        mark_name = f"w{i}"
+        # mark + word
+        parts.append(f'<mark name="{mark_name}"/>{word}')
+        # 공백으로 어절 구분 보존
+        if i != len(words) - 1:
+            parts.append(" ")
+
+    parts.append("</speak>")
+    return "".join(parts)
 
 
 def _build_client() -> texttospeech.TextToSpeechClient:
-    settings = Settings()
+    settings = TtsSettings()
     api_key = settings.google_tts_api_key
     return texttospeech.TextToSpeechClient(
         client_options=ClientOptions(api_key=api_key)
@@ -58,34 +79,16 @@ def list_voices(prefix: str | None = None) -> List[str]:
     return voices
 
 
-def _build_ssml(text: str) -> str:
-    """Wrap plain text in a simple SSML <speak> container.
 
-    This is intentionally minimal so we can experiment quickly.
-    """
-
-    # 어절 단위로 split
-    word = text.split()
-
-    # mark 태그 추가
-    marked_text = " ".join(f"{w} <mark name='m{i}'/>" for i, w in enumerate(word))
-
-    return f"<speak>{marked_text}</speak>"
-
-
-def test_synthesize_ssml_to_mp3() -> None:
+def synthesize_words_to_mp3(words: List[Word]) -> dict:
     client = _build_client()
 
-    # TODO: Replace this sample text and voice with your own.
-    sample_text = "안녕하세요. 구글 TTS SSML 테스트입니다. 마크드 텍스트를 테스트합니다. 각 어절마다 마크가 들어갑니다."
-    ssml = _build_ssml(sample_text)
-
-    synthesis_input = texttospeech.SynthesisInput(ssml=ssml)
+    synthesis_input = texttospeech.SynthesisInput(ssml=build_ssml(" ".join([w.text for w in words])))
 
     voice = texttospeech.VoiceSelectionParams(
         language_code="ko-KR",
         # Replace this with a concrete voice name from list_google_tts_voices
-        name="ko-KR-Chirp3-HD-Achernar",
+        name="ko-KR-Wavenet-C",
     )
 
     audio_config = texttospeech.AudioConfig(
@@ -103,20 +106,31 @@ def test_synthesize_ssml_to_mp3() -> None:
         )
     )
 
-    output_path = BASE_PATH.parent / "a.mp3"
-    output_path.write_bytes(response.audio_content)
-
-    # Print mark timestamps for quick inspection
+    # time_points를 words.start에 적용
     for tp in response.timepoints:
-        print(f"mark={tp.mark_name!r}, time={tp.time_seconds:.3f}s")
+        for i, w in enumerate(words):
+            if tp.mark_name == f"w{i}":
+                w.start = tp.time_seconds
+                break
+        
 
-    print(f"Wrote synthesized audio to {output_path}")
+    return {
+        "audio_content": response.audio_content,
+        "words": words,
+    }
+
+
 
 def main() -> None:
     # voices = list_voices()
     # for v in voices:
     #     print(v)
-    test_synthesize_ssml_to_mp3()
-    
+    synthesize_words_to_mp3([
+        Word(text="안녕하세요", displayed_text="안녕하세요", is_caption_splitted=False, start=0.0),
+        Word(text="SSML", displayed_text="SSML", is_caption_splitted=False, start=1.0),
+        Word(text="테스트", displayed_text="테스트", is_caption_splitted=False, start=2.0),
+        Word(text="입니다.", displayed_text="입니다.", is_caption_splitted=False, start=3.0),
+    ])
+
 if __name__ == "__main__":
     raise SystemExit(main())
