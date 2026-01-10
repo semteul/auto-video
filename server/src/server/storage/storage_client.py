@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import BinaryIO
 
 from minio import Minio
+from pydantic import BaseModel
 
 from .settings import MinioSettings
+
+import uuid
 
 
 @dataclass
@@ -12,6 +16,13 @@ class UploadedObject:
     url: str
     bucket: str
     object_name: str
+
+class UploadedMedia(BaseModel):
+    id: str
+    bucket: str
+    object_name: str
+    name: str
+    content_type: str
 
 
 def _build_client() -> tuple[Minio, MinioSettings]:
@@ -58,6 +69,7 @@ def upload_tts_audio(
         url=url, bucket=settings.minio_bucket, object_name=object_name
     )
 
+
 def get_tts_audio(object_name: str) -> bytes:
     """Download synthesized audio bytes from MinIO."""
 
@@ -91,6 +103,61 @@ def generate_readonly_signed_url(object_name: str, expires_seconds: int = 3600) 
         bucket_name=settings.minio_bucket,
         object_name=object_name,
         expires=timedelta(seconds=expires_seconds),
+    )
+
+    return url
+
+
+# Random UUID object name upload
+def upload_media_stream(
+    fileobj: BinaryIO,
+    *,
+    content_type: str,
+    id: str,
+) -> UploadedMedia:
+    client, settings = _build_client()
+    bucket = settings.minio_media_bucket
+
+    if not client.bucket_exists(bucket):
+        client.make_bucket(bucket)
+
+    object_name = f"files/{uuid.uuid4().hex}"
+
+    client.put_object(
+        bucket_name=bucket,
+        object_name=object_name,
+        data=fileobj,
+        length=-1,
+        part_size=10 * 1024 * 1024,
+        content_type=content_type,
+    )
+
+    return UploadedMedia(
+        id=str(id),
+        bucket=bucket,
+        object_name=object_name,
+        name=object_name,
+        content_type=content_type,
+    )
+
+
+def generate_media_signed_url(
+    media: UploadedMedia,
+    expires_seconds: int = 3600,
+) -> str:
+
+    from datetime import timedelta
+
+    client, _ = _build_client()
+
+    url = client.presigned_get_object(
+        bucket_name=media.bucket,
+        object_name=media.object_name,
+        expires=timedelta(seconds=expires_seconds),
+        response_headers={
+            "response-content-type": media.content_type,
+            "response-content-disposition": f'attachment; filename="{media.name}"',
+        },
     )
 
     return url

@@ -15,3 +15,4 @@ class MinioSettings(EnvBaseSettings):
     minio_secret_key: str
     minio_bucket: str = "audio"
     minio_secure: bool = False
+    minio_media_bucket: str

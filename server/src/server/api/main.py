@@ -2,9 +2,12 @@ import io
 from json import load
 from uuid import uuid4
 import uuid
+from wsgiref import validate
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, File, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from server.redis.redis_client import get_media, register_media_to_project
+from server.storage.minio_client import generate_media_signed_url, upload_media_stream
 from server.tts.tts import VideoScript
 from ..redis import save_section, load_section
 from ..redis import save_video_script, load_video_script
@@ -178,6 +181,56 @@ async def get_script_srt(script_id: str) -> Response:
         },
     )
 
+'''
+업로드된 media의 id를 반환
+'''
+@app.post("/project/{project_id}/media/upload")
+async def upload(project_id: str, file: UploadFile = File(...)):
+    # MIME 검사
+    validate_result = await validate_media(file)
+
+    if not validate_result:
+        raise HTTPException(400, "Invalid file")
+    
+    # Create ID for media
+    id = uuid.uuid4().hex
+
+    # Upload Storage
+    uploaded_media = upload_media_stream(
+        id=id,
+        fileobj=file.file,
+        content_type=file.content_type,
+    )
+
+    # Register media to project in DB
+    register_media_to_project(project_id, uploaded_media)
+    
+    return {"media_id": uploaded_media.id}
+    
+@app.get("/project/{project_id}/media/{media_id}/url")
+async def get_media_url(project_id: str, media_id: str):
+    # TODO 권한 검사
+
+    media = get_media(project_id, media_id)
+    if media is None:
+        raise HTTPException(404, "Media not found")
+    
+    url = generate_media_signed_url(media, expires_seconds=3600)
+    return {"url": url}
+
+ALLOWED_MIME = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "audio/mpeg": "mp3",
+    "audio/x-wav": "wav",
+    "audio/webm": "webm",
+}
+
+async def validate_media(file: UploadFile):
+    # TODO 파일 크기 검사 및 매직코드, 심층 검사
+    if file.content_type not in ALLOWED_MIME:
+        return False
+    return True
 
 async def generate_audio(section: Section) -> Section:
     result = synthesize_words_to_mp3(section.words)
@@ -297,3 +350,4 @@ def buildScriptSrt(script: VideoScript) -> str:
         srt_index += 1
 
     return "\n".join(srt_lines)
+    
