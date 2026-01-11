@@ -16,6 +16,9 @@ dependencies = [
     "mutagen (>=1.47.0,<2.0.0)",
     "python-multipart (>=0.0.21,<0.0.22)",
     "boto3 (>=1.42.25,<2.0.0)",
+    "sqlalchemy (>=2.0.45,<3.0.0)",
+    "alembic (>=1.18.0,<2.0.0)",
+    "psycopg2-binary (>=2.9.11,<3.0.0)",
 ]
 
 [tool.poetry]
