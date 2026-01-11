@@ -4,7 +4,7 @@ import json
 from typing import Optional
 
 import redis
-from server.storage.minio_client import UploadedMedia
+from server.storage.storage_client import UploadedFile
 from server.tts.tts import VideoScript
 
 from ..tts import Section, Word
@@ -95,22 +95,20 @@ def load_video_script(script_id: str) -> Optional[VideoScript]:
     raw = json.loads(data)
     return VideoScript(**raw)
 
-def register_media_to_project(projectId, media: UploadedMedia):
+def register_media_to_project(projectId, media: UploadedFile):
     client = _get_client()
     media_dict = media.model_dump()
     # media_id별로 저장
     client.set(f"project:{projectId}:media:{media.id}", json.dumps(media_dict, ensure_ascii=False))
     return True
 
-def get_media(projectId: str, media_id: str) -> UploadedMedia | None:
+def get_media(projectId: str, media_id: str) -> UploadedFile | None:
     client = _get_client()
     # media_id에 쌍따옴표가 포함되어 있으면 제거
     clean_media_id = media_id.strip('"')
     media_json = client.get(f"project:{projectId}:media:{clean_media_id}")
-    print("조회 key:", f"project:{projectId}:media:{clean_media_id}")
-    print("media_json:", media_json)
     if media_json is None:
         return None
     media_dict = json.loads(media_json)
-    return UploadedMedia.model_validate(media_dict)
+    return UploadedFile.model_validate(media_dict)
 
