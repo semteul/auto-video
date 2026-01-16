@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,3 +27,11 @@ class EnvBaseSettings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+
+class DatabaseSettings(EnvBaseSettings):
+    db_host: str = Field(alias="DATABASE_HOST")
+    db_port: str = Field(alias="DATABASE_PORT")
+    db_name: str = Field(alias="DATABASE_NAME")
+    db_user: str = Field(alias="DATABASE_USER")
+    db_password: str = Field(alias="DATABASE_PASSWORD")

@@ -1,33 +1,29 @@
-from sqlalchemy import Column, Integer, String
+from datetime import date
+
+from sqlalchemy import Date, ForeignKey, Integer, String, Column
+from sqlalchemy.dialects.postgresql import JSONB
 from .base import Base
-from sqlalchemy.orm import relationship
-
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
 
 
-class Project(Base):
+class ProjectModel(Base):
     __tablename__ = "projects"
 
-    id = Column(Integer, primary_key=True)
-    title = Column(String, nullable=False)
-    media = relationship(
-        "ProjectMedia",
-        back_populates="project",
-        cascade="all, delete-orphan",
-    )
+    id = Column(String, primary_key=True)
+    body = Column(JSONB, nullable=True)
 
-class ProjectMedia(Base):
-    __tablename__ = "project_media"
 
-    id = Column(Integer, primary_key=True)
-    object_key = Column(String, nullable=False)
-    name= Column(String, nullable=False)
+class FileModel(Base):
+    __tablename__ = "files"
 
-    project = relationship(
-        "Project",
-        back_populates="media"
-    )
+    id = Column(String, primary_key=True)
+    project_id = Column(String, ForeignKey("projects.id"), nullable=False) # 연관된 프로젝트 ID
+
+    delete_date = Column(Date, nullable=True, default=date.max) # 삭제 예정일
+    
+    bucket = Column(String, nullable=False) # 저장소 버킷 이름
+    object_name = Column(String, nullable=False) # 저장소 내 파일 위치
+
+    name = Column(String, nullable=False) # 실제 파일 이를
+    size = Column(Integer, nullable=False) # 파일 크기 (바이트 단위)
+    content_type = Column(String, nullable=True) # MIME 타입
+    

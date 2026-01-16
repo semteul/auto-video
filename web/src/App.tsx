@@ -1,9 +1,8 @@
 import { Routes, Route, Link } from 'react-router-dom'
 import './App.css'
 import LoginPage from './pages/LoginPage'
+import ProjectsPage from './pages/ProjectsPage'
 import EditorPage from './pages/EditorPage'
-import MainPage from './pages/MainPage'
-import VideoEditor from './pages/VideoEditorPage'
 
 function HomePage() {
   return <h1>홈</h1>
@@ -21,17 +20,14 @@ function App() {
             <Link className="rounded px-2 py-1 hover:bg-slate-800" to="/">
               홈
             </Link>
-            <Link className="rounded px-2 py-1 hover:bg-slate-800" to="/main">
-              메인
+            <Link className="rounded px-2 py-1 hover:bg-slate-800" to="/projects">
+              프로젝트 목록
             </Link>
             <Link className="rounded px-2 py-1 hover:bg-slate-800" to="/editor">
               에디터
             </Link>
             <Link className="rounded px-2 py-1 hover:bg-slate-800" to="/video-editor">
               영상 리스트
-            </Link>
-            <Link className="rounded px-2 py-1 hover:bg-slate-800" to="/login">
-              로그인
             </Link>
           </nav>
         </div>
@@ -41,9 +37,8 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/editor" element={<EditorPage />} />
-          <Route path="/video-editor" element={<VideoEditor />} />
-          <Route path="/main" element={<MainPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/project/:projectId" element={<EditorPage />} />
         </Routes>
       </main>
     </div>

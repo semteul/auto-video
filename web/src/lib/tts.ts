@@ -1,110 +1,25 @@
-import type { Section, Word, VideoScript } from "../editor/ssml";
+import type { Section, Interval, VideoProject, Word } from "./editor/types";
 
 const serverUrl = import.meta.env.VITE_SERVER_API_URL ?? "http://localhost:8000";
 
 // --- API response shapes (snake_case from backend) ---
-interface ApiWord {
+interface WordResponse {
   text: string;
   displayed_text: string;
   is_caption_splitted: boolean;
   start: number;
 }
 
-interface ApiSection {
+interface IntervalResponse {
+  id: string;
+  words: WordResponse[];
+}
+
+interface SectionResponse {
   id: string;
   is_generated: boolean;
-  words: ApiWord[];
+  words: WordResponse[];
   delay: number;
-}
-
-interface ApiVideoScript {
-  id: string;
-  title: string;
-  section_ids: string[];
-}
-
-function isApiWord(value: unknown): value is ApiWord {
-  if (!value || typeof value !== "object") return false;
-  const v = value as Record<string, unknown>;
-  return (
-    typeof v.text === "string" &&
-    typeof v.displayed_text === "string" &&
-    typeof v.is_caption_splitted === "boolean" &&
-    (typeof v.start === "number")
-  );
-}
-
-function isApiSection(value: unknown): value is ApiSection {
-  if (!value || typeof value !== "object") return false;
-  const v = value as Record<string, unknown>;
-
-  if (typeof v.id !== "string" || typeof v.is_generated !== "boolean" || typeof v.delay !== "number") {
-    return false;
-  }
-
-  if (!Array.isArray(v.words)) return false;
-  return v.words.every(isApiWord);
-}
-
-function isApiVideoScript(value: unknown): value is ApiVideoScript {
-  if (!value || typeof value !== "object") return false;
-  const v = value as Record<string, unknown>;
-  if (typeof v.id !== "string" || typeof v.title !== "string") {
-    return false;
-  }
-  if (!Array.isArray(v.section_ids)) return false;
-  return v.section_ids.every((id) => typeof id === "string");
-}
-
-
-function isApiAudioUrlResponse(value: unknown): value is { url: string } {
-  if (!value || typeof value !== "object") return false;
-  const v = value as Record<string, unknown>;
-  return typeof v.url === "string";
-}
-
-function mapApiWordToWord(apiWord: ApiWord): Word {
-  return {
-    text: apiWord.text,
-    displayedText: apiWord.displayed_text,
-    isCaptionSplitted: apiWord.is_caption_splitted,
-    start: apiWord.start,
-  };
-}
-
-function mapApiSectionToSection(apiSection: ApiSection): Section {
-  return {
-    id: apiSection.id,
-    isGenerated: apiSection.is_generated,
-    words: apiSection.words.map(mapApiWordToWord),
-    delay: apiSection.delay,
-  };
-}
-
-function mapWordToApiWord(word: Word): ApiWord {
-  return {
-    text: word.text,
-    displayed_text: word.displayedText,
-    is_caption_splitted: word.isCaptionSplitted,
-    start: word.start,
-  };
-}
-
-function mapSectionToApiSection(section: Section): ApiSection {
-  return {
-    id: section.id,
-    is_generated: section.isGenerated,
-    words: section.words.map(mapWordToApiWord),
-    delay: section.delay,
-  };
-}
-
-function mapAPiVideoScriptToVideoScript(apiVideoScript: ApiVideoScript): VideoScript {
-  return {
-    id: apiVideoScript.id,
-    title: apiVideoScript.title,
-    sectionIds: apiVideoScript.section_ids,
-  };
 }
 
 export async function getSection(scriptId: string, sectionId: string): Promise<Section> {

@@ -2,21 +2,54 @@
  * Drag & Drop Media Pool Component
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import UploadForm from "./UploadForm";
-import { getMediaUrl, uploadMedia } from "../lib/media";
+import { getMediaList, getMediaUrl, uploadMedia } from "../lib/media";
+import { deleteMedia } from "../lib/project";
 
 interface FileDetails {
   name: string;
   size: number;
   type: string;
   url: string;
+  id?: string;
   uploadedUrl?: string;
 }
 
 export function MediaPool({ projectId }: { projectId: string }) {
   const [medium, setMedium] = useState<FileDetails[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    async function fetchMediaList() {
+      try {
+        const mediaList = await getMediaList(projectId);
+        const fileDetails: FileDetails[] = mediaList.map((media) => ({
+          name: media.name,
+          size: media.size,
+          type: media.content_type,
+          url: media.url,
+          uploadedUrl: media.url,
+          id: media.id,
+        }));
+        setMedium(fileDetails);
+      } catch (error) {
+        console.error("Error fetching media list:", error);
+      }
+    }
+    fetchMediaList();
+  }, [projectId]);
+
+  const onDelete = (mediaId: string) => {
+    if (!mediaId) return;
+    deleteMedia(projectId, mediaId)
+      .then(() => {
+        setMedium((prev) => prev.filter((item) => item.id !== mediaId));
+      })
+      .catch((error) => {
+        console.error("Error deleting media:", error);
+      });
+  }
 
   const onDrop = (files: File[]) => {
     const fileDetails: FileDetails[] = files.map((file) =>
@@ -26,7 +59,7 @@ export function MediaPool({ projectId }: { projectId: string }) {
       type: file.type,
       url: URL.createObjectURL(file),
     }));
-    
+
     // Upload Medium
     files.forEach(async (file, index) => {
       try {
@@ -35,6 +68,7 @@ export function MediaPool({ projectId }: { projectId: string }) {
         setMedium((prev) => {
           const newMedium = [...prev];
           newMedium[prev.length - files.length + index].uploadedUrl = url;
+          newMedium[prev.length - files.length + index].id = id;
           return newMedium;
         });
       } catch (error) {
@@ -69,7 +103,16 @@ export function MediaPool({ projectId }: { projectId: string }) {
             {medium.map((file, i) => (
               <div
                 className="w-full flex flex-row h-25 gap-2 bg-gray-200 px-2 py-2 rounded cursor-pointer"
-                key={i}>
+                key={i}
+                draggable
+                onDragStart={e => {
+                  if (file.id) {
+                    e.dataTransfer.setData("media-id", file.id);
+                  }
+                  e.dataTransfer.setData("media-url", file.uploadedUrl || file.url);
+                  e.dataTransfer.setData("media-type", file.type.startsWith("image") ? "image" : "video");
+                }}
+              >
                 <div className="relative">
                   <img
                     src={file.url}
@@ -86,6 +129,13 @@ export function MediaPool({ projectId }: { projectId: string }) {
                   <div><strong>Size:</strong> {(file.size / 1024).toFixed(2)} KB</div>
                   <div><strong>Type:</strong> {file.type}</div>
                 </div>
+                {
+                  file.id && (
+                    <button onClick={() => { if (file.id) {onDelete(file.id)}}} className="text-red-500 text-sm self-start hover:underline cursor-pointer">
+                      X
+                    </button>
+                  )
+                }
               </div>
             ))}
           </div>

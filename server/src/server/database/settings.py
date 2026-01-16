@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+from pydantic import Field
 from ..config import EnvBaseSettings
 
-
 class DatabaseSettings(EnvBaseSettings):
-    data_base_host: str
-    data_base_port: int
-    data_base_name: str
-    data_base_user: str
-    data_base_password: str
+    database_host: str = Field(alias="DATABASE_HOST")
+    database_port: int = Field(alias="DATABASE_PORT")
+    database_name: str = Field(alias="DATABASE_NAME")
+    database_user: str = Field(alias="DATABASE_USER")
+    database_password: str = Field(alias="DATABASE_PASSWORD")

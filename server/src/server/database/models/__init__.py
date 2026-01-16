@@ -1,4 +1,3 @@
 from .base import Base
-from .models import User
-from .models import Project
-from .models import ProjectMedia
+from .models import ProjectModel
+from .models import FileModel
