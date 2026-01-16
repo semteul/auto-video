@@ -19,7 +19,9 @@
     "react-dropzone": "^14.3.8",
     "react-icons": "^5.5.0",
     "react-modal": "^3.16.3",
-    "react-router-dom": "^7.11.0"
+    "react-router-dom": "^7.11.0",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.29"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
