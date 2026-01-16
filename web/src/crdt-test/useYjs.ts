@@ -1,5 +1,6 @@
 import { useContext } from 'react';
-import { YjsContextType, YjsContext } from './YjsContext';
+import { YjsContext } from './YjsContextInstance';
+import type { YjsContextType } from './YjsContextInstance';
 
 const useYjs = (): YjsContextType => {
   const ctx = useContext(YjsContext);
