@@ -1,15 +1,14 @@
 import React, { useState, useContext } from 'react';
-import { YjsProvider } from './YjsContext';
-import { YjsContext } from './YjsContextInstance';
-import { v4 as uuidv4 } from 'uuid';
+import { EditorContext } from '../lib/editor/EditorContextInstance';
+import { EditorProvider } from '../lib/editor/EditorContext';
 
 const CrdtTestContent: React.FC = () => {
-  const ctx = useContext(YjsContext);
-  if (!ctx) return <div>YjsContext가 초기화되지 않았습니다.</div>;
-  const { project, sections, actions } = ctx;
-  const title = project?.title || '';
-  const sectionOrder = project?.sectionOrder || [];
-  const setTitle = actions?.setTitle;
+  const ctx = useContext(EditorContext);
+  if (!ctx) return <div>EditorContext가 초기화되지 않았습니다.</div>;
+  const { project, setTitle } = ctx;
+  if (!project) return <div>프로젝트 데이터가 없습니다.</div>;
+
+  const title = project.title;
 
   return (
     <div>
@@ -63,7 +62,7 @@ const CrdtTestContent: React.FC = () => {
 };
 
 const CrdtTestExample: React.FC = () => {
-  const [id, setId] = useState('default-room');
+  const [id, setId] = useState('my-test23');
   const [input, setInput] = useState(id);
   return (
     <div style={{ padding: 24 }}>
@@ -85,9 +84,9 @@ const CrdtTestExample: React.FC = () => {
         </label>
         <button type="submit" style={{ marginLeft: 8 }}>Change Room</button>
       </form>
-      <YjsProvider roomId={id}>
+      <EditorProvider id={id}>
         <CrdtTestContent />
-      </YjsProvider>
+      </EditorProvider>
     </div>
   );
 };

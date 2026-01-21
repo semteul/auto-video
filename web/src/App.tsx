@@ -1,13 +1,6 @@
 import { Routes, Route, Link } from 'react-router-dom'
 import './App.css'
-import LoginPage from './pages/LoginPage'
-import ProjectsPage from './pages/ProjectsPage'
-import EditorPage from './pages/EditorPage'
-import CrdtTestExample from './crdt-test/CrdtTestExample';
-
-function HomePage() {
-  return <h1>홈</h1>
-}
+import CrdtTestExample from './crdt-test/CrdtTestExample'
 
 function App() {
   return (
@@ -18,18 +11,6 @@ function App() {
             auto-video
           </span>
           <nav className="flex gap-3 text-sm">
-            <Link className="rounded px-2 py-1 hover:bg-slate-800" to="/">
-              홈
-            </Link>
-            <Link className="rounded px-2 py-1 hover:bg-slate-800" to="/projects">
-              프로젝트 목록
-            </Link>
-            <Link className="rounded px-2 py-1 hover:bg-slate-800" to="/editor">
-              에디터
-            </Link>
-            <Link className="rounded px-2 py-1 hover:bg-slate-800" to="/video-editor">
-              영상 리스트
-            </Link>
             <Link className="rounded px-2 py-1 hover:bg-slate-800" to="/crdt-test">
               CRDT 테스트
             </Link>
@@ -39,10 +20,6 @@ function App() {
 
       <main className="mx-auto max-w-5xl px-4 py-4">
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/project/:projectId" element={<EditorPage />} />
           <Route path="/crdt-test" element={<CrdtTestExample />} />
         </Routes>
       </main>

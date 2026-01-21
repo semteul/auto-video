@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "fastify": "^5.7.1",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.29"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.9",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "dev": "tsx watch api/server.ts",
+    "start": "tsx api/server.ts"
+  }
+}
